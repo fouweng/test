@@ -1,0 +1,45 @@
+CFLAGS += -Wall -g  -I../include
+LDFLAGS += -L../ -loctopus
+
+.PHONY: all tmpfs romfs
+
+SHARED_LIB_RTSIO = librtsio.so
+LIB_RTSIO_SONAME = librtsio.so.1
+LIB_RTSIO_LINK = librtsio.so.2
+
+SHARED_LIB_OPTIO = opt_io.so.1.0.1
+LIB_OPTIO_SONAME = opt_io.so.1
+LIB_OPTIO_LINK = opt_io.so
+
+all: $(SHARED_LIB_RTSIO) $(SHARED_LIB_OPTIO) testptz tmpfs
+
+$(SHARED_LIB_RTSIO):rtsio.c
+	$(CC) -shared $(CFLAGS) -fPIC -o $@ $^
+
+$(SHARED_LIB_OPTIO):opt_io.c
+	$(CC) -shared $(CFLAGS) -fPIC -Wl,-soname,$(LIB_OPTIO_SONAME) -o $@ $^
+
+testptz:testptz.c librtsio.so 
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) 
+
+tmpfs:
+	cp -f $(SHARED_LIB_RTSIO) $(DIR_TMPFS)/lib
+	cp -f $(SHARED_LIB_OPTIO) $(DIR_TMPFS)/lib
+	cp -f rtsio.h $(DIR_TMPFS)/include
+	$(TMPFSINST) -s $(SHARED_LIB_RTSIO) /lib/$(LIB_RTSIO_SONAME)
+	$(TMPFSINST) -s $(LIB_RTSIO_SONAME) /lib/$(LIB_RTSIO_LINK)
+	$(TMPFSINST) -s $(SHARED_LIB_OPTIO) /lib/$(LIB_OPTIO_SONAME)
+	$(TMPFSINST) -s $(LIB_OPTIO_SONAME) /lib/$(LIB_OPTIO_LINK)
+
+romfs:
+	$(ROMFSINST) $(SHARED_LIB_RTSIO) /lib/$(SHARED_LIB_RTSIO)
+	$(ROMFSINST) -s $(SHARED_LIB_RTSIO) $(LIB_RTSIO_SONAME)
+	$(ROMFSINST) -s $(LIB_RTSIO_SONAME) $(LIB_RTSIO_LINK)
+	$(ROMFSINST) testptz /bin
+	mkdir -p $(DIR_ROMFS)/usr/lib/octopus
+	$(ROMFSINST) $(SHARED_LIB_OPTIO) /usr/lib/octopus
+	$(ROMFSINST) -s $(SHARED_LIB_OPTIO) /usr/lib/octopus/$(LIB_OPTIO_SONAME)
+	$(ROMFSINST) -s $(LIB_OPTIO_SONAME) /usr/lib/octopus/$(LIB_OPTIO_LINK)
+
+clean:
+	rm -rf *.o *.so *.so.*

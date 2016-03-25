@@ -1,0 +1,73 @@
+#ifndef REG_ADDR_H
+#define REG_ADDR_H
+
+
+#define ISP_CONTROL3			0x8003
+#define ISP_OSD_START_X			0x8880
+#define ISP_OSD_START_Y			0x8882
+#define ISP_OSD_CHAR_Y			0x8884
+#define ISP_OSD_CHAR_U			0x8885
+#define ISP_OSD_CHAR_V			0x8886
+#define ISP_OSD_BACK_Y			0x8887
+#define ISP_OSD_BACK_U			0x8888
+#define ISP_OSD_BACK_V			0x8889
+#define ISP_OSD_BACK_CTRL		0x888A
+#define ISP_OSD_CHAR_WIDTH		0x888B
+#define ISP_OSD_CHAR_HEIGHT		0x888C
+#define ISP_OSD_CHAR_HEIGHT_UP		0x888D
+#define ISP_OSD_CHAR_HEIGHT_DOWN	0x888E
+#define ISP_OSD_CHAR_WIDTH_LEFT		0x888F
+#define ISP_OSD_NUM			0x8890
+#define ISP_OSD_DATE_SEL		0x8891
+#define ISP_OSD_DATE_A_PARAMETER	0x8892
+#define ISP_OSD_DATE_B_PARAMETER	0x889A
+#define ISP_OSD_TIME_PARAMETER		0x88A2
+#define ISP_OSD_TIME_SYNC		0x88A8
+#define ISP_OSD_TIME_NOW		0x88B4
+
+#define ISP_MTD_START0_X		0x8900
+#define ISP_MTD_START0_Y		0x8902
+#define ISP_MTD_END0_X			0x8904
+#define ISP_MTD_END0_Y			0x8906
+#define ISP_MTD_START1_X		0x8908
+#define ISP_MTD_START1_Y		0x890A
+#define ISP_MTD_END1_X			0x890C
+#define ISP_MTD_END1_Y			0x890E
+#define ISP_MTD_START2_X		0x8910
+#define ISP_MTD_START2_Y		0x8912
+#define ISP_MTD_END2_X			0x8914
+#define ISP_MTD_END2_Y			0x8916
+#define ISP_MTD_SAMPLE			0x8918
+#define ISP_MTD_thdp0			0x8919
+#define ISP_MTD_thdp1			0x891A
+#define ISP_MTD_thdp2			0x891B
+#define ISP_MTD_CTRL			0x8927
+
+#define ISP_MSK_START0_X		0x88C0
+#define ISP_MSK_START0_Y		0x88C2
+#define ISP_MSK_END0_X			0x88C4
+#define ISP_MSK_END0_Y			0x88C6
+#define ISP_MSK_START1_X		0x88C8
+#define ISP_MSK_START1_Y		0x88CA
+#define ISP_MSK_END1_X			0x88CC
+#define ISP_MSK_END1_Y			0x88CE
+#define ISP_MSK_START2_X		0x88D0
+#define ISP_MSK_START2_Y		0x88D2
+#define ISP_MSK_END2_X			0x88D4
+#define ISP_MSK_END2_Y			0x88D6
+#define ISP_MSK_Y			0x88D8
+#define ISP_MSK_U			0x88D9
+#define ISP_MSK_V			0x88DA
+#define ISP_MSK_CTRL			0x88DB
+
+#define ISP_OSD_CHAR_CTRL		0x88ba
+#define ISP_OSD_CHAR_THD		0x88bb
+#define ISP_OSD_CHAR_INC		0x88bc
+#define ISP_OSD_CHAR_ALPHA		0x88bd
+
+#define ISP_OSD_KEY_FRAME_CTRL		0xfd3a
+#define ISP_H264_FRAME_QP		0xfd5e
+
+
+
+#endif

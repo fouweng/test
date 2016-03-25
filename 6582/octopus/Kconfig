@@ -1,0 +1,15 @@
+config OCTOPUS_PLUGIN_CAM
+	bool "plugin camera"
+	default n
+
+config OCTOPUS_PLUGIN_NM
+	bool "plugin network manager"
+	default n
+
+config OCTOPUS_PLUGIN_IO
+	bool "plugin IO"
+	default n
+
+config OCTOPUS_PLUGIN_UVC
+	bool  "plugin UVC"
+	default n

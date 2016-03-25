@@ -1,0 +1,220 @@
+/*************************************************************************
+    > File Name: io_client.c
+    > Author: steven_feng
+    > Mail: steven_feng@realsil.com.cn
+    > Created Time: 2015年04月05日 星期五 14时41分18秒
+ ************************************************************************/
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<fcntl.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<string.h>
+#include<errno.h>
+
+#include"internal.h"
+#include"hw_control.h"
+#include"rtsio.h"
+
+uint8_t g_chdir=0x00;
+uint8_t g_level=0xFF;
+
+inline int checksum(char *strcommout)
+{
+	int  i, sum = 0;
+	for (i = 1 ; i < 6 ; i++) {
+		sum += strcommout[i];
+	}
+	if (sum > 0xFF)
+		strcommout[6] = sum % 0x100;
+	else
+		strcommout[6] = sum;
+}
+
+void _set_direct(enum ptz_direct chdir)
+{
+	g_chdir=chdir;
+}
+
+void _set_speed(enum ptz_speed level)
+{
+	g_level=level;
+}
+
+char *makecmd(uint8_t *strcommout, char chcameraid)
+{
+	strcommout[0]  = 0xFF;
+	strcommout[1]  = chcameraid;
+	strcommout[2]  = 0x0;
+	strcommout[3]  = g_chdir;
+	strcommout[4]  = g_level;
+	strcommout[5]  = g_level;
+	checksum(strcommout);
+	return  strcommout;
+}
+
+int set_io_cmd(int msg, uint8_t *strcommout)
+{
+	int ret;
+	struct cmd_msg *cmd=NULL;
+
+	ret = opt_alloc_cmd_message(&cmd, 7);
+	if(!cmd)
+		goto out;
+
+	cmd->mtype = MSG_TYPE_REQUEST;
+	cmd->pid = getpid();
+	cmd->domain = CMD_DOMAIN_IO;
+	memcpy(cmd->priv, strcommout, cmd->length);
+
+	ret = opt_send_cmd_msg(msg, cmd, 10000);
+	if(ret)
+		goto out;
+	if(OPT_STATUS_OK != cmd->status)
+		fprintf(stderr, "cmd send failed\n");
+out:
+	if(cmd)
+		opt_free_cmd_msg(&cmd);
+	return ret;
+}
+
+int running(int fd, char chcameraid)
+{
+	int ret;
+	uint8_t strcommout[7];
+	makecmd(strcommout, chcameraid);
+	ret = set_io_cmd(fd, strcommout);
+
+	return ret;
+}
+
+int rts_io_ptz_running(enum ptz_direct chdir)
+{
+	int ret;
+	int fd=0;
+
+	if(chdir != PTZ_LEFT && chdir != PTZ_RIGHT && chdir != PTZ_UP
+	   && chdir != PTZ_DOWN && chdir != PTZ_STOP)
+		return -1;
+	
+	fd = opt_open_dev("/dev/ttyS0");
+	if (fd < 0)
+		goto out;
+
+	ret = opt_lock_dev(fd);
+	if (ret) {
+		fprintf(stderr, "lock device fail\n");
+		goto out;
+	}
+	
+	_set_direct(chdir);
+	ret = running(fd, CAMERAID);
+	if (ret) {
+		fprintf(stderr, "running device fail\n");
+		goto out;
+	}
+out:
+	opt_unlock_dev(fd);
+	return ret;
+}
+
+int rts_io_ptz_running_angle(enum ptz_direct chdir, uint16_t angle)
+{
+	int ret;
+	int fd=0;
+	int time=0;
+
+	if(angle > 355 && angle < 360)
+		return -1;
+	if(angle > 360)
+		angle = angle%360;
+
+	if(chdir != PTZ_LEFT && chdir != PTZ_RIGHT && chdir != PTZ_UP
+	   && chdir != PTZ_DOWN && chdir != PTZ_STOP)
+		return -1;
+
+	time = (angle*100*1000)/408;
+
+	fd = opt_open_dev("/dev/ttyS0");
+	if (fd < 0)
+		goto out;
+
+	ret = opt_lock_dev(fd);
+	if (ret) {
+		fprintf(stderr, "lock device fail\n");
+		goto out;
+	}
+
+	_set_direct(chdir);
+	ret = running(fd, CAMERAID);
+	if (ret) {
+		fprintf(stderr, "Running device fail\n");
+		goto out;
+	}
+	opt_unlock_dev(fd);
+
+	usleep(time * 1000);
+	
+	fd = opt_open_dev("/dev/ttyS0");
+	if (fd < 0)
+		goto out;
+
+	_set_direct(PTZ_STOP);
+	ret = running(fd, CAMERAID);
+	if (ret) {
+		fprintf(stderr, "Running device fail\n");
+		goto out;
+	}
+
+out:
+	opt_unlock_dev(fd);
+	return ret;
+
+}
+
+int rts_io_ptz_set_speed(enum ptz_speed level)
+{
+	int ret;
+	int fd=0;
+
+	if(level<=0)
+		level=0;
+	else if(level<=PTZ_SLOWEST)
+		level=PTZ_SLOWEST;
+	else if(level<=PTZ_SLOW)
+		level=PTZ_SLOW;
+	else if(level<=PTZ_NOMAL)
+		level=PTZ_NOMAL;
+	else if(level<=PTZ_FAST)
+		level=PTZ_FAST;
+	else if(level<=PTZ_FASTEST)
+		level=PTZ_FASTEST;
+	else
+		level=0xFF;
+
+	fd = opt_open_dev("/dev/ttyS0");
+	if (fd < 0)
+		goto out;
+
+	ret = opt_lock_dev(fd);
+	if (ret) {
+		fprintf(stderr, "lock device fail\n");
+		goto out;
+	}
+
+	_set_speed(level);
+	ret = running(fd, CAMERAID);
+	if (ret) {
+		fprintf(stderr, "Set speed fail\n");
+		goto out;
+	}
+out:
+	opt_unlock_dev(fd);
+	return ret;
+}
+
+enum ptz_speed rts_io_ptz_get_speed()
+{
+	return g_level;
+}
